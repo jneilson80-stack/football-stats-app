@@ -1,10 +1,9 @@
 from nicegui import ui, app
 import shared
-from main import render_nav
 
 @ui.page('/game')
 def game_page():
-    render_nav()
+    shared.render_nav()
     ui.label('⚡ Fast Tap Game Mode').classes('text-2xl font-bold p-4')
 
     lineup = app.storage.user['lineup']

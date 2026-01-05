@@ -1,10 +1,9 @@
 from nicegui import ui, app
 import shared
-from main import render_nav   
 
 @ui.page('/add')
 def add_merge_page():
-    render_nav()              
+    shared.render_nav()           
 
     ui.label('➕ Add or Merge Player Stats').classes('text-2xl font-bold p-4')
 

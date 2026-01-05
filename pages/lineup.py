@@ -1,10 +1,10 @@
 from nicegui import ui, app
 import shared
-from main import render_nav
+
 
 @ui.page('/lineup')
 def lineup_page():
-    render_nav()
+    shared.render_nav()
     ui.label('📋 Lineup Setup').classes('text-2xl font-bold p-4')
 
     stats = app.storage.user['stats']

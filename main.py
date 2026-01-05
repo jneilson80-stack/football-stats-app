@@ -1,4 +1,5 @@
 from nicegui import ui, app
+import shared
 
 # ----------------------------------------
 # Persistent user storage initialization
@@ -16,31 +17,19 @@ def ensure_storage():
             app.storage.user[k] = v
 
 # ----------------------------------------
-# Shared navigation bar
-# ----------------------------------------
-
-def render_nav():
-    with ui.header().classes('items-center justify-center bg-blue-700 text-white p-3 shadow-md'):
-        with ui.row().classes('w-full justify-around text-lg'):
-            ui.link('🏠 Home', '/')
-            ui.link('👥 Lineup', '/lineup')
-            ui.link('⚡ Game', '/game')
-            ui.link('➕ Add', '/add')
-            ui.link('📤 Export', '/export')
-
-# ----------------------------------------
-# HOME PAGE (Updated with Acronyms)
+# FOOTBALL HOME PAGE (Final, Correct Version)
 # ----------------------------------------
 
 @ui.page('/')
 def home_page():
     ensure_storage()
-    render_nav()
+    shared.render_nav()
 
     ui.label('🏈 Welcome to Fast Football Stats!').classes('text-2xl font-bold p-4')
     ui.markdown(
         "This app is designed for **fast, reliable stat tracking** right at the field.\n\n"
-        "Use the navigation bar above to jump between **Lineup**, **Game Mode**, **Add/Merge**, and **Export**."
+        "Use the navigation bar above to jump between **Lineup**, **Game Mode**, "
+        "**Add/Merge**, and **Export**."
     ).classes('p-4')
 
     # -------------------------
@@ -96,18 +85,18 @@ def home_page():
     ).classes('p-2')
 
     # -------------------------
-    # 📘 Stat Acronyms & Definitions (NEW)
+    # 📘 Stat Acronyms & Definitions
     # -------------------------
     ui.label('📘 Stat Acronyms & Definitions').classes('text-xl font-bold p-2')
     ui.markdown(
         "### 🛡️ Defense\n"
-        "- **FP** — Flag Pulls (number of flags pulled)\n"
-        "- **SK** — Sacks (QB pulled behind LOS)\n"
+        "- **FP** — Flag Pulls\n"
+        "- **SK** — Sacks\n"
         "- **INT** — Interceptions\n"
         "- **PBU** — Pass Breakups\n"
         "- **SFTY** — Safety (2‑point defensive score)\n"
         "- **DTD** — Defensive Touchdown\n"
-        "- **FF** — Forced Fumble (ball knocked loose)\n\n"
+        "- **FF** — Forced Fumble\n\n"
 
         "### 🤲 Receiving\n"
         "- **REC** — Receptions\n"
@@ -168,5 +157,7 @@ import pages.export
 ui.run(
     host='0.0.0.0',
     port=8080,
-    storage_secret='flagstats_2026_live'
+    storage_secret='flagstats_2026_live',
+    reload=False,
+    workers=1
 )

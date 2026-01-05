@@ -4,11 +4,11 @@ import random
 from datetime import datetime
 import io
 import shared
-from main import render_nav
+
 
 @ui.page('/export')
 def export_page():
-    render_nav()
+    shared.render_nav()
 
     ui.label('📤 Export Summary & Season Save/Load').classes('text-2xl font-bold p-4')
 

@@ -1,4 +1,17 @@
-from nicegui import app
+from nicegui import ui, app
+
+# ----------------------------------------
+# Navigation Bar (moved here to avoid circular imports)
+# ----------------------------------------
+
+def render_nav():
+    with ui.header().classes('items-center justify-center bg-blue-700 text-white p-3 shadow-md'):
+        with ui.row().classes('w-full justify-around text-lg'):
+            ui.link('🏠 Home', '/')
+            ui.link('👥 Lineup', '/lineup')
+            ui.link('⚡ Game', '/game')
+            ui.link('➕ Add', '/add')
+            ui.link('📤 Export', '/export')
 
 # ----------------------------------------
 # Player lookup
