@@ -4,9 +4,12 @@ import random
 from datetime import datetime
 import io
 import shared
+from main import render_nav
 
 @ui.page('/export')
 def export_page():
+    render_nav()
+
     ui.label('📤 Export Summary & Season Save/Load').classes('text-2xl font-bold p-4')
 
     stats = app.storage.user['stats']
@@ -70,6 +73,7 @@ def export_page():
     season_data = {
         'stats': app.storage.user['stats'],
         'lineup': app.storage.user['lineup'],
+        'last_play': app.storage.user.get('last_play', {}),
     }
     season_json = json.dumps(season_data, indent=4)
     season_filename = (
@@ -78,9 +82,18 @@ def export_page():
     )
 
     with ui.row().classes('p-4 gap-4'):
-        ui.download(text=csv_data, filename='flagfootball_stats_summary.csv', label='💾 Download CSV')
-        ui.download(text=txt_data, filename='flagfootball_stats_summary.txt', label='📝 Download TXT Summary')
-        ui.download(text=season_json, filename=season_filename, label='💾 Download Season JSON')
+        ui.button(
+            '💾 Download CSV',
+            on_click=lambda: ui.download(csv_data.encode('utf-8'), 'flagfootball_stats_summary.csv')
+        )
+        ui.button(
+            '📝 Download TXT Summary',
+            on_click=lambda: ui.download(txt_data.encode('utf-8'), 'flagfootball_stats_summary.txt')
+        )
+        ui.button(
+            '💾 Download Season JSON',
+            on_click=lambda: ui.download(season_json.encode('utf-8'), season_filename)
+        )
 
     ui.separator()
 
@@ -95,6 +108,9 @@ def export_page():
                 return
             app.storage.user['stats'] = loaded.get('stats', [])
             app.storage.user['lineup'] = loaded.get('lineup', [])
+            app.storage.user['last_play'] = loaded.get('last_play', {})
+            for p in app.storage.user['stats']:
+                shared.ensure_player_fields(p)
             ui.notify('Season loaded — lineup and stats successfully restored!', type='positive')
         except Exception as ex:
             ui.notify(f'Error loading season file: {ex}', type='negative')
