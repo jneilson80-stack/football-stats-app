@@ -8,15 +8,24 @@ import shared
 
 @ui.page('/export')
 def export_page():
+    # ----------------------------------------
+    # REQUIRED INITIALIZATION
+    # ----------------------------------------
+    shared.ensure_storage()
     shared.render_nav()
 
     ui.label('📤 Export Summary & Season Save/Load').classes('text-2xl font-bold p-4')
 
-    stats = app.storage.user['stats']
+    stats = app.storage.user.get('season_stats', [])
     if not stats:
-        ui.label('No stats available to export yet. Play a game or add stats first.').classes('text-red-600 p-4')
+        ui.label('No stats available to export yet. Play a game or add stats first.').classes(
+            'text-red-600 p-4'
+        )
         return
 
+    # ----------------------------------------
+    # BUILD PREVIEW TABLE
+    # ----------------------------------------
     rows = []
     for p in stats:
         shared.ensure_player_fields(p)
@@ -46,9 +55,11 @@ def export_page():
     ui.table(
         columns=[{'name': k, 'label': k, 'field': k} for k in rows[0].keys()],
         rows=rows,
-    ).classes('p-4')
+    ).classes('p-4 w-full overflow-x-auto')
 
-    # CSV
+    # ----------------------------------------
+    # CSV EXPORT
+    # ----------------------------------------
     csv_lines = []
     headers = list(rows[0].keys())
     csv_lines.append(','.join(headers))
@@ -56,7 +67,9 @@ def export_page():
         csv_lines.append(','.join(str(r[h]) for h in headers))
     csv_data = '\n'.join(csv_lines)
 
-    # TXT
+    # ----------------------------------------
+    # TXT EXPORT
+    # ----------------------------------------
     buffer = io.StringIO()
     buffer.write('Flag Football Stats Summary\n\n')
     for r in rows:
@@ -70,18 +83,25 @@ def export_page():
         )
     txt_data = buffer.getvalue()
 
+    # ----------------------------------------
+    # JSON EXPORT (FULL SEASON SAVE)
+    # ----------------------------------------
     season_data = {
-        'stats': app.storage.user['stats'],
+        'season_stats': app.storage.user.get('season_stats', []),
         'lineup': app.storage.user['lineup'],
         'last_play_p1': app.storage.user.get('last_play_p1'),
         'last_play_p2': app.storage.user.get('last_play_p2'),
     }
+
     season_json = json.dumps(season_data, indent=4)
     season_filename = (
         f"season_flagfootball_{random.randint(1, 1_000_000)}_"
         f"{datetime.now().strftime('%m-%d-%y')}.json"
     )
 
+    # ----------------------------------------
+    # DOWNLOAD BUTTONS
+    # ----------------------------------------
     with ui.row().classes('p-4 gap-4'):
         ui.button(
             '💾 Download CSV',
@@ -98,22 +118,40 @@ def export_page():
 
     ui.separator()
 
+    # ----------------------------------------
+    # SEASON LOAD
+    # ----------------------------------------
     ui.label('📁 Season Load').classes('text-xl font-bold p-4')
 
     async def handle_upload(e):
         file = e.content
         try:
             loaded = json.loads(file.read().decode('utf-8'))
-            if 'stats' not in loaded:
+
+            if 'season_stats' not in loaded:
                 ui.notify("Invalid season file. Missing required 'stats' field.", type='negative')
                 return
-            app.storage.user['stats'] = loaded.get('stats', [])
-            app.storage.user['lineup'] = loaded.get('lineup', [])
-            app.storage.user['last_play'] = loaded.get('last_play', {})
+
+            # Restore season stats
+            app.storage.user['season_stats'] = loaded.get('season_stats', [])
             for p in app.storage.user['stats']:
                 shared.ensure_player_fields(p)
+
+            # Restore lineup
+            app.storage.user['lineup'] = loaded.get('lineup', [])
+
+            # Restore last plays (correct keys)
+            app.storage.user['last_play_p1'] = loaded.get('last_play_p1')
+            app.storage.user['last_play_p2'] = loaded.get('last_play_p2')
+
             ui.notify('Season loaded — lineup and stats successfully restored!', type='positive')
+
         except Exception as ex:
             ui.notify(f'Error loading season file: {ex}', type='negative')
 
-    ui.upload(on_upload=handle_upload, label='📂 Load Season JSON', auto_upload=True, multiple=False).classes('p-4')
+    ui.upload(
+        on_upload=handle_upload,
+        label='📂 Load Season JSON',
+        auto_upload=True,
+        multiple=False
+    ).classes('p-4')

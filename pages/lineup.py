@@ -4,78 +4,165 @@ import shared
 
 @ui.page('/lineup')
 def lineup_page():
+    shared.ensure_storage()
     shared.render_nav()
+
     ui.label('📋 Lineup Setup').classes('text-2xl font-bold p-4')
 
-    stats = app.storage.user['stats']
-    added_players = [p['Player'] for p in stats]
-    default_players = ['Nevan', 'Theo', 'Kekoa']
-    all_players = sorted(set(default_players + added_players))
+    # Ensure lineup exists
+    if 'lineup' not in app.storage.user:
+        app.storage.user['lineup'] = []
 
-    lineup = app.storage.user['lineup']
-
-    def save_lineup(selected):
-        app.storage.user['lineup'] = sorted(selected)
-        ui.notify('Lineup saved successfully.')
-
+    # ----------------------------------------
+    # UI LAYOUT (UI FIRST — CALLBACKS LATER)
+    # ----------------------------------------
     with ui.column().classes('p-4 gap-4'):
-        multi = ui.select(
-            options=all_players,
-            label='Select players for the lineup (alphabetical)',
-            value=lineup,
-            multiple=True,
+
+        # Input field + Add button
+        name_input = ui.input(
+            label='Enter Name',
+            placeholder='Type a player name...',
+        )
+        add_button = ui.button('➕ Add Player')
+
+        # Current lineup list
+        ui.label('Current Lineup:').classes('mt-4 font-semibold')
+
+        list_area = ui.column()
+
+        # Reset lineup section
+        ui.separator()
+        ui.label('Reset Lineup').classes('mt-4 font-semibold text-red-600')
+        clear_button = ui.button(
+            '🗑️ Clear Entire Lineup',
+            color='red',
+        ).classes('mt-2')
+
+        # Game & Season controls
+        ui.separator()
+        ui.label('Game & Season Controls').classes('text-xl font-bold mt-6')
+
+        new_game_button = ui.button(
+            '🔄 Start New Game',
+        ).classes('mt-2')
+
+        new_season_button = ui.button(
+            '🔥 Start New Season',
+        ).classes('bg-red-600 text-white mt-2')
+
+    # ----------------------------------------
+    # HELPERS
+    # ----------------------------------------
+    def get_lineup():
+        return app.storage.user.get('lineup', [])
+
+    def set_lineup(new_list):
+        app.storage.user['lineup'] = new_list
+
+    # ----------------------------------------
+    # REFRESH LIST
+    # ----------------------------------------
+    def refresh_list():
+        lineup = get_lineup()
+        list_area.clear()
+
+        if not lineup:
+            with list_area:
+                ui.label('No players yet.')
+        else:
+            with list_area:
+                ui.label('Tap a name to remove it.').classes(
+                    'text-sm text-gray-600 mb-2'
+                )
+                for p in lineup:
+                    ui.button(
+                        f'• {p}',
+                        on_click=lambda name=p: tap_to_remove(name),
+                    ).classes('w-full text-left')
+                ui.label(f'Total Players: {len(lineup)}').classes(
+                    'mt-2 text-sm text-gray-600'
+                )
+
+    # ----------------------------------------
+    # CALLBACKS (AFTER UI EXISTS)
+    # ----------------------------------------
+    def add_player():
+        lineup = get_lineup()
+        name = name_input.value.strip()
+        if not name:
+            ui.notify('Please enter a name.', type='warning')
+            return
+
+        name = name.title()
+        if name in lineup:
+            ui.notify('Player already in lineup.', type='warning')
+            return
+
+        lineup.append(name)
+        lineup.sort()
+        set_lineup(lineup)
+        name_input.value = ''
+        refresh_list()
+        ui.notify(f'Added {name} to lineup.')
+
+    def tap_to_remove(name):
+        lineup = get_lineup()
+        if name in lineup:
+            lineup.remove(name)
+            set_lineup(lineup)
+            refresh_list()
+            ui.notify(f'Removed {name} from lineup.')
+
+    def clear_lineup():
+        set_lineup([])
+        refresh_list()
+        ui.notify('Lineup cleared.', type='positive')
+
+    def start_new_game():
+        app.storage.user['game_stats'] = []
+        app.storage.user['last_play_p1'] = None
+        app.storage.user['last_play_p2'] = None
+        ui.notify(
+            'New game started — current game stats cleared.',
+            type='positive',
         )
 
-        ui.button('💾 Save Lineup', on_click=lambda: save_lineup(multi.value))
-
-        ui.label('Current lineup (alphabetical):').classes('mt-4 font-semibold')
-        lineup_str = ', '.join(sorted(app.storage.user['lineup'])) or 'No players yet.'
-        ui.label(lineup_str)
-
-    # --- Game & Season Controls ---
-    ui.separator()
-
-    ui.label('Game & Season Controls').classes('text-xl font-bold mt-6')
-
-    # New Game (safe)
-    def new_game():
-        app.storage.user['game_stats'] = []          # clear current game only
-        app.storage.user['last_play_p1'] = None      # clear undo history
-        app.storage.user['last_play_p2'] = None
-        ui.notify('New game started — game stats cleared!', type='positive')
-
-    ui.button('Start New Game', on_click=new_game).classes('mt-2')
-
-    # Start New Season (dangerous, with confirmation)
     def confirm_new_season():
         with ui.dialog() as dialog:
             with ui.column().classes('p-4 items-center'):
-                ui.label('Are you sure you want to start a new season?').classes('text-lg font-bold')
-                ui.label('This will erase ALL stats and season data (lineup will be kept).')
+                ui.label('Start a NEW SEASON?').classes('text-lg font-bold')
+                ui.label(
+                    'This will erase ALL stats, including season totals.'
+                )
 
                 with ui.row().classes('gap-4 mt-4'):
                     ui.button('Cancel', on_click=dialog.close)
-                    ui.button('Yes, Start New Season', 
-                              on_click=lambda: do_new_season(dialog)
+                    ui.button(
+                        'Yes, Start New Season',
+                        on_click=lambda: do_new_season(dialog),
                     ).classes('bg-red-600 text-white')
 
         dialog.open()
 
     def do_new_season(dialog):
-        # Keep lineup, clear everything else
-        lineup = app.storage.user.get('lineup', [])
-
-        app.storage.user.clear()
-
-        # Restore lineup after clearing
-        app.storage.user['lineup'] = lineup
-        app.storage.user['stats'] = []
         app.storage.user['game_stats'] = []
-        app.storage.user['last_update'] = None
+        app.storage.user['season_stats'] = []
         app.storage.user['last_play_p1'] = None
         app.storage.user['last_play_p2'] = None
-
         dialog.close()
-        ui.notify('New season started — all data cleared!', type='positive')
+        ui.notify(
+            'New season started — all stats cleared!',
+            type='positive',
+        )
 
-    ui.button('Start New Season', on_click=confirm_new_season).classes('bg-red-600 text-white mt-4')
+    # ----------------------------------------
+    # BIND CALLBACKS TO UI
+    # ----------------------------------------
+    name_input.on('keydown.enter', add_player)
+    add_button.on_click(add_player)
+    clear_button.on_click(clear_lineup)
+    new_game_button.on_click(start_new_game)
+    new_season_button.on_click(confirm_new_season)
+
+    # Initial list render
+    refresh_list()

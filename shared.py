@@ -10,17 +10,17 @@ def ensure_storage():
     """Guarantee all required storage keys exist."""
     user = app.storage.user
 
-    if 'stats' not in user:
-        user['stats'] = []              # Season totals
+    if 'season_stats' not in user:
+        user['season_stats'] = []        # Season totals (OFFICIAL)
 
     if 'game_stats' not in user:
-        user['game_stats'] = []         # Current game only
+        user['game_stats'] = []          # Current game only
 
     if 'lineup' not in user:
-        user['lineup'] = []             # Persistent roster
+        user['lineup'] = []              # Persistent roster
 
     if 'last_update' not in user:
-        user['last_update'] = None      # Timestamp of last merge
+        user['last_update'] = None       # Timestamp of last merge
 
 
 # ============================================================
@@ -42,7 +42,7 @@ def render_nav():
 # PLAYER LOOKUP HELPERS
 # ============================================================
 
-def get_player_by_name(name: str, source='stats'):
+def get_player_by_name(name: str, source='season_stats'):
     """Lookup player in either season stats or game stats."""
     ensure_storage()
     data = app.storage.user[source]
@@ -71,14 +71,14 @@ def ensure_player_fields(player: dict):
 # ============================================================
 
 def merge_or_add_player(entry):
-    """Used by Add/Merge tab — still writes into season stats."""
+    """Used by Add/Merge tab — writes into SEASON_STATS."""
     ensure_storage()
-    stats = app.storage.user['stats']
-    existing = get_player_by_name(entry['Player'], source='stats')
+    season_stats = app.storage.user['season_stats']
+    existing = get_player_by_name(entry['Player'], source='season_stats')
 
     if existing is None:
         ensure_player_fields(entry)
-        stats.append(entry)
+        season_stats.append(entry)
         return 'added'
 
     ensure_player_fields(existing)
@@ -152,7 +152,7 @@ def undo_last(player_slot: str):
 # ============================================================
 
 def merge_game_into_season():
-    """Merge current game stats into season totals."""
+    """Merge current game stats into SEASON TOTALS."""
     ensure_storage()
     user = app.storage.user
 
@@ -161,7 +161,7 @@ def merge_game_into_season():
         ui.notify('No game stats to merge.', type='warning')
         return
 
-    season_stats = user['stats']
+    season_stats = user['season_stats']
 
     # Build lookup for season stats
     season_by_name = {p['Player']: p for p in season_stats}
