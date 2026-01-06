@@ -2,27 +2,12 @@ from nicegui import ui, app
 import shared
 
 # ----------------------------------------
-# Persistent user storage initialization
-# ----------------------------------------
-
-def ensure_storage():
-    defaults = {
-        'stats': [],
-        'lineup': [],
-        'last_play_p1': None,
-        'last_play_p2': None,
-    }
-    for k, v in defaults.items():
-        if k not in app.storage.user:
-            app.storage.user[k] = v
-
-# ----------------------------------------
-# FOOTBALL HOME PAGE (Final, Correct Version)
+# FOOTBALL HOME PAGE
 # ----------------------------------------
 
 @ui.page('/')
 def home_page():
-    ensure_storage()
+    shared.ensure_storage()
     shared.render_nav()
 
     ui.label('🏈 Welcome to Fast Football Stats!').classes('text-2xl font-bold p-4')
@@ -141,14 +126,30 @@ def home_page():
         "- **Forced Fumble** = ball knocked loose"
     ).classes('p-2')
 
+    # ---------------------------------------------------------
+    # GLOBAL VERSION DOT (must be inside a page for older NiceGUI)
+    # ---------------------------------------------------------
+    def show_version():
+        ui.notify('Version: 2026-01-05-2')
+
+    dot = ui.button('•', on_click=show_version)
+    dot.props('flat dense round')
+    dot.classes(
+        'fixed bottom-2 right-2 text-gray-300 text-xl '
+        'cursor-pointer z-[9999] bg-transparent shadow-none'
+    )
+
+
+
+
 # ----------------------------------------
 # Import subpages
 # ----------------------------------------
 
 import pages.lineup
-import pages.add_merge
 import pages.game
 import pages.export
+
 
 # ----------------------------------------
 # Run app

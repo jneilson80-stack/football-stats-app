@@ -73,7 +73,8 @@ def export_page():
     season_data = {
         'stats': app.storage.user['stats'],
         'lineup': app.storage.user['lineup'],
-        'last_play': app.storage.user.get('last_play', {}),
+        'last_play_p1': app.storage.user.get('last_play_p1'),
+        'last_play_p2': app.storage.user.get('last_play_p2'),
     }
     season_json = json.dumps(season_data, indent=4)
     season_filename = (

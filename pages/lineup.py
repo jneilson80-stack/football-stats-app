@@ -39,9 +39,10 @@ def lineup_page():
 
     # New Game (safe)
     def new_game():
-        app.storage.user['stats'] = []
-        app.storage.user['last_play'] = {}
-        ui.notify('New game started — stats cleared!', type='positive')
+        app.storage.user['game_stats'] = []          # clear current game only
+        app.storage.user['last_play_p1'] = None      # clear undo history
+        app.storage.user['last_play_p2'] = None
+        ui.notify('New game started — game stats cleared!', type='positive')
 
     ui.button('Start New Game', on_click=new_game).classes('mt-2')
 
@@ -50,7 +51,7 @@ def lineup_page():
         with ui.dialog() as dialog:
             with ui.column().classes('p-4 items-center'):
                 ui.label('Are you sure you want to start a new season?').classes('text-lg font-bold')
-                ui.label('This will erase ALL stats, lineup, and season data.')
+                ui.label('This will erase ALL stats and season data (lineup will be kept).')
 
                 with ui.row().classes('gap-4 mt-4'):
                     ui.button('Cancel', on_click=dialog.close)
@@ -61,7 +62,19 @@ def lineup_page():
         dialog.open()
 
     def do_new_season(dialog):
+        # Keep lineup, clear everything else
+        lineup = app.storage.user.get('lineup', [])
+
         app.storage.user.clear()
+
+        # Restore lineup after clearing
+        app.storage.user['lineup'] = lineup
+        app.storage.user['stats'] = []
+        app.storage.user['game_stats'] = []
+        app.storage.user['last_update'] = None
+        app.storage.user['last_play_p1'] = None
+        app.storage.user['last_play_p2'] = None
+
         dialog.close()
         ui.notify('New season started — all data cleared!', type='positive')
 
