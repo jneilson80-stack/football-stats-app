@@ -7,6 +7,8 @@ from functools import partial
 def game_page():
     shared.ensure_storage()
     shared.render_nav()
+    shared.inject_global_styles()  # <-- REQUIRED for black background + white text
+
     # ------------------------------------------------------------
     # JS LONG-PRESS HANDLER (works on all NiceGUI versions)
     # ------------------------------------------------------------
@@ -27,8 +29,8 @@ def game_page():
             });
         </script>
     ''')
-    
-    ui.label('⚡ Fast Tap Game Mode').classes('text-2xl font-bold p-4')
+
+    ui.label('⚡ Fast Tap Game Mode').classes('text-2xl font-bold p-4 text-white')
 
     lineup = app.storage.user.get('lineup', [])
     if not lineup:
@@ -98,13 +100,13 @@ def game_page():
     ]
 
     ui.separator()
-    ui.label('📊 Season Totals').classes('text-xl font-bold p-4')
+    ui.label('📊 Season Totals').classes('text-xl font-bold p-4 text-white')
     season_table = ui.table(columns=full_columns, rows=[]).classes(
-        'p-4 w-full overflow-x-auto'
+        'p-4 w-full overflow-x-auto text-white'
     )
 
     timestamp_label = ui.label('Last updated: (not yet merged)').classes(
-        'text-sm text-gray-600 px-4'
+        'text-sm text-white px-4'
     )
 
     # ------------------------------------------------------------
@@ -121,16 +123,16 @@ def game_page():
     ]
 
     ui.separator()
-    ui.label('📋 Current Game Summary').classes('text-xl font-bold p-4')
+    ui.label('📋 Current Game Summary').classes('text-xl font-bold p-4 text-white')
 
     game_summary_table = ui.table(
         columns=key_columns,
         rows=[],
         row_key='Player',
-    ).classes('p-4 w-full overflow-x-auto')
+    ).classes('p-4 w-full overflow-x-auto text-white')
 
     # ------------------------------------------------------------
-    # REFRESH TABLES (MUST COME FIRST)
+    # REFRESH TABLES
     # ------------------------------------------------------------
     def refresh_tables():
         # Season totals
@@ -184,14 +186,14 @@ def game_page():
         )
 
     # ------------------------------------------------------------
-    # TAP FUNCTION (MUST COME BEFORE BUTTONS)
+    # TAP FUNCTION
     # ------------------------------------------------------------
     def tap(player_name: str, field: str, delta: int, tag: str):
         shared.record_fast_tap(player_name, field, delta, tag)
         refresh_tables()
 
     # ------------------------------------------------------------
-    # TWO-COLUMN BUTTON LAYOUT (JS long-press + tooltip)
+    # TWO-COLUMN BUTTON LAYOUT
     # ------------------------------------------------------------
     def two_col_buttons(buttons):
         with ui.row().classes('w-full no-wrap gap-4'):
@@ -206,10 +208,10 @@ def game_page():
                     b.on('mounted', f"addLongPress(document.getElementById('{b.id}'), '{tip}')")
 
     # ------------------------------------------------------------
-    # FAST TAP PLAYER BLOCK (NOW WITH TOOLTIPS)
+    # FAST TAP PLAYER BLOCK
     # ------------------------------------------------------------
     def render_player_block(player_name: str, tag: str):
-        with ui.column().classes('w-full bg-gray-100 p-4 rounded-lg mt-4'):
+        with ui.column().classes('w-full bg-gray-100 p-4 rounded-lg mt-4 text-black'):
             ui.label(f'{player_name} Actions').classes('text-xl font-bold')
 
             # DEFENSE

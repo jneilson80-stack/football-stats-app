@@ -11,10 +11,12 @@ def export_page():
     # ----------------------------------------
     # REQUIRED INITIALIZATION
     # ----------------------------------------
+    
     shared.ensure_storage()
     shared.render_nav()
+    shared.inject_global_styles()  # <-- REQUIRED for black background + readable text
 
-    ui.label('📤 Export Summary & Season Save/Load').classes('text-2xl font-bold p-4')
+    ui.label('📤 Export Summary & Season Save/Load').classes('text-2xl font-bold p-4 text-white')
 
     stats = app.storage.user.get('season_stats', [])
     if not stats:

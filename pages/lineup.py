@@ -6,6 +6,7 @@ import shared
 def lineup_page():
     shared.ensure_storage()
     shared.render_nav()
+    shared.inject_global_styles()  # <-- REQUIRED for dark theme + white inputs
 
     ui.label('📋 Lineup Setup').classes('text-2xl font-bold p-4')
 
@@ -18,11 +19,12 @@ def lineup_page():
     # ----------------------------------------
     with ui.column().classes('p-4 gap-4'):
 
-        # Input field + Add button
+        # Hard-coded label + input field
+        ui.label('Enter Name').classes('text-white text-sm')
         name_input = ui.input(
-            label='Enter Name',
             placeholder='Type a player name...',
-        )
+        ).classes('text-white')
+
         add_button = ui.button('➕ Add Player')
 
         # Current lineup list
@@ -48,7 +50,7 @@ def lineup_page():
 
         new_season_button = ui.button(
             '🔥 Start New Season',
-        ).classes('bg-red-600 text-white mt-2')
+            ).classes('bg-red-600 text-white mt-2')
 
     # ----------------------------------------
     # HELPERS

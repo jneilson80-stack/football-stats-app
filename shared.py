@@ -3,6 +3,86 @@ from datetime import datetime
 import zoneinfo
 
 # ============================================================
+# GLOBAL DARK THEME + INPUT FIXES
+# ============================================================
+def inject_global_styles():
+    """Inject global CSS for dark theme and readable inputs."""
+    ui.add_head_html("""
+    <style>
+        /* Global dark background */
+        body {
+            background-color: #000 !important;
+            color: white !important;
+        }
+
+        /* Prevent Quasar from overriding background */
+        .q-page, .q-layout, .q-page-container {
+            background-color: transparent !important;
+        }
+
+        /* Make all input text white */
+        .q-field__native,
+        .q-field__input {
+            color: white !important;
+            caret-color: white !important;
+        }
+
+        /* UNIVERSAL PLACEHOLDER FIX */
+        .q-field__native::placeholder,
+        .q-field__input::placeholder,
+        .q-placeholder,
+        .q-field__control-container span {
+            color: white !important;
+            opacity: 0.8 !important;
+        }
+
+        /* FORCE INPUT LABELS (like "Enter Name") TO BE PURE WHITE */
+        label.q-field__label {
+            color: white !important;
+            opacity: 1 !important;
+            font-weight: 500 !important;
+        }
+
+        /* Override Quasar grey label classes (inherited theme) */
+        .text-grey-6,
+        .text-grey-7,
+        .text-grey-8,
+        .text-grey-9 {
+            color: white !important;
+        }
+
+        /* Dropdown items */
+        .q-item__label {
+            color: white !important;
+        }
+
+        /* Input borders */
+        .q-field__control {
+            border-color: white !important;
+        }
+
+        /* ============================================================
+           TABLES: KEEP WHITE BACKGROUND, FORCE BLACK TEXT
+           ============================================================ */
+        .q-table__container {
+            background-color: white !important;
+            color: black !important;
+        }
+
+        .q-table thead tr,
+        .q-table tbody tr {
+            background-color: white !important;
+        }
+
+        .q-table th,
+        .q-table td {
+            color: black !important;
+            border-color: #ccc !important;
+        }
+    </style>
+    """)
+
+# ============================================================
 # STORAGE INITIALIZATION
 # ============================================================
 
